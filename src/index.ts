@@ -1,14 +1,12 @@
 import { hooks as authHooks } from '@feathersjs/authentication';
 import { AuthenticateHookSettings } from '@feathersjs/authentication/lib/hooks/authenticate';
 import { Forbidden } from '@feathersjs/errors';
-import { Hook, HookContext as FHookContext, Service } from '@feathersjs/feathers';
+import { Hook, HookContext } from '@feathersjs/feathers';
 
 const { authenticate } = authHooks;
 
-interface HookContext extends FHookContext<any, Service<any>> {}
-
 interface AuthOptions {
-    rolesGetter: (context: HookContext, userId: number) => string[] | Promise<string[]>;
+    rolesGetter: <T = any>(context: HookContext<T>, userId: number) => string[] | Promise<string[]>;
 }
 
 export const auth = (
@@ -36,14 +34,14 @@ type ReqRolesOptions =
           some?: ReqRolesOptions;
       };
 
-const everyFn = (context: HookContext, reqRoles: ReqRolesOptions) =>
+const everyFn = <T = any>(context: HookContext<T>, reqRoles: ReqRolesOptions) =>
     hasRoleRec(reqRoles, true).call(context.service, context);
 
-const someFn = (context: HookContext, reqRoles: ReqRolesOptions) =>
+const someFn = <T = any>(context: HookContext<T>, reqRoles: ReqRolesOptions) =>
     hasRoleRec(reqRoles, false).call(context.service, context);
 
-const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => (
-    context: HookContext
+const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => <T = any>(
+    context: HookContext<T>
 ): boolean => {
     const roles: string[] = context.params.roles || [];
 
@@ -61,7 +59,9 @@ const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => (
     return true;
 };
 
-export const hasRole = (reqRoles: ReqRolesOptions = {}) => (context: HookContext): boolean => {
+export const hasRole = (reqRoles: ReqRolesOptions = {}) => <T = any>(
+    context: HookContext<T>
+): boolean => {
     if (context.params.authenticated) {
         if (!context.params.provider) {
             return true;
@@ -71,7 +71,7 @@ export const hasRole = (reqRoles: ReqRolesOptions = {}) => (context: HookContext
     return hasRoleRec(reqRoles, true).call(context.service, context);
 };
 
-export const reqRole = (reqRoles: ReqRolesOptions = {}) => (context: HookContext) => {
+export const reqRole = (reqRoles: ReqRolesOptions = {}) => <T = any>(context: HookContext<T>) => {
     if (!hasRole(reqRoles).call(context.service, context)) {
         throw new Forbidden(new Error('Access forbidden'));
     }
