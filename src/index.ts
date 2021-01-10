@@ -6,8 +6,10 @@ import { Hook, HookContext } from '@feathersjs/feathers';
 const { authenticate } = authHooks;
 
 interface AuthOptions {
-    rolesGetter: <T = any>(context: HookContext<T>, userId: number) => string[] | Promise<string[]>;
+    rolesGetter: (context: HookContext, userId: number) => string[] | Promise<string[]>;
 }
+
+type SyncContextFunction<T> = (context: HookContext) => T;
 
 export function auth(
     options: AuthOptions,
@@ -36,14 +38,14 @@ type ReqRolesOptions =
           some?: ReqRolesOptions;
       };
 
-const everyFn = <T = any>(context: HookContext<T>, reqRoles: ReqRolesOptions) =>
+const everyFn = (context: HookContext, reqRoles: ReqRolesOptions) =>
     hasRoleRec(reqRoles, true).call(context.service, context);
 
-const someFn = <T = any>(context: HookContext<T>, reqRoles: ReqRolesOptions) =>
+const someFn = (context: HookContext, reqRoles: ReqRolesOptions) =>
     hasRoleRec(reqRoles, false).call(context.service, context);
 
-const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => <T = any>(
-    context: HookContext<T>
+const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => (
+    context: HookContext
 ): boolean => {
     const roles: string[] = context.params.roles || [];
 
@@ -61,8 +63,8 @@ const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => <T = any>(
     return true;
 };
 
-export function hasRole<T = any>(reqRoles: ReqRolesOptions = {}) {
-    return (context: HookContext<T>): boolean => {
+export const hasRole = (reqRoles: ReqRolesOptions = {}): SyncContextFunction<boolean> => {
+    return (context) => {
         if (context.params.authenticated) {
             if (!context.params.provider) {
                 return true;
@@ -71,12 +73,12 @@ export function hasRole<T = any>(reqRoles: ReqRolesOptions = {}) {
 
         return hasRoleRec(reqRoles, true).call(context.service, context);
     };
-}
+};
 
-export function reqRole<T = any>(reqRoles: ReqRolesOptions = {}) {
-    return (context: HookContext<T>) => {
+export const reqRole = (reqRoles: ReqRolesOptions = {}): Hook => {
+    return (context: HookContext) => {
         if (!hasRole(reqRoles).call(context.service, context)) {
             throw new Forbidden(new Error('Access forbidden'));
         }
     };
-}
+};
