@@ -9,22 +9,24 @@ interface AuthOptions {
     rolesGetter: <T = any>(context: HookContext<T>, userId: number) => string[] | Promise<string[]>;
 }
 
-export const auth = (
+export function auth(
     options: AuthOptions,
     originalSettings: string | AuthenticateHookSettings,
     ...originalStrategies: string[]
-): Hook => async (context) => {
-    // authenticate using feathers
-    await authenticate(originalSettings, ...originalStrategies).call(context.service, context);
+): Hook {
+    return async (context) => {
+        // authenticate using feathers
+        await authenticate(originalSettings, ...originalStrategies).call(context.service, context);
 
-    if (context.params.user) {
-        context.params.roles = await Promise.resolve(
-            options.rolesGetter(context, context.params.user.id)
-        );
-    }
+        if (context.params.user) {
+            context.params.roles = await Promise.resolve(
+                options.rolesGetter(context, context.params.user.id)
+            );
+        }
 
-    return context;
-};
+        return context;
+    };
+}
 
 type ReqRolesOptions =
     | string
@@ -59,20 +61,22 @@ const hasRoleRec = (reqRoles: ReqRolesOptions, every: boolean) => <T = any>(
     return true;
 };
 
-export const hasRole = (reqRoles: ReqRolesOptions = {}) => <T = any>(
-    context: HookContext<T>
-): boolean => {
-    if (context.params.authenticated) {
-        if (!context.params.provider) {
-            return true;
+export function hasRole<T = any>(reqRoles: ReqRolesOptions = {}) {
+    return (context: HookContext<T>): boolean => {
+        if (context.params.authenticated) {
+            if (!context.params.provider) {
+                return true;
+            }
         }
-    }
 
-    return hasRoleRec(reqRoles, true).call(context.service, context);
-};
+        return hasRoleRec(reqRoles, true).call(context.service, context);
+    };
+}
 
-export const reqRole = (reqRoles: ReqRolesOptions = {}) => <T = any>(context: HookContext<T>) => {
-    if (!hasRole(reqRoles).call(context.service, context)) {
-        throw new Forbidden(new Error('Access forbidden'));
-    }
-};
+export function reqRole<T = any>(reqRoles: ReqRolesOptions = {}) {
+    return (context: HookContext<T>) => {
+        if (!hasRole(reqRoles).call(context.service, context)) {
+            throw new Forbidden(new Error('Access forbidden'));
+        }
+    };
+}
