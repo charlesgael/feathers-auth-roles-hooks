@@ -1,0 +1,8 @@
+{
+  "authentication": {
+    "local": {
+      "usernameField": "name",
+      "passwordField": "password"
+    }
+  }
+}
