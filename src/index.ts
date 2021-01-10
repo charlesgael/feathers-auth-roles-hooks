@@ -1,9 +1,11 @@
 import { hooks as authHooks } from '@feathersjs/authentication';
 import { AuthenticateHookSettings } from '@feathersjs/authentication/lib/hooks/authenticate';
 import { Forbidden } from '@feathersjs/errors';
-import { HookContext } from '@feathersjs/feathers';
+import { Hook, HookContext as FHookContext, Service } from '@feathersjs/feathers';
 
 const { authenticate } = authHooks;
+
+interface HookContext extends FHookContext<any, Service<any>> {}
 
 interface AuthOptions {
     rolesGetter: (context: HookContext, userId: number) => string[] | Promise<string[]>;
@@ -13,7 +15,7 @@ export const auth = (
     options: AuthOptions,
     originalSettings: string | AuthenticateHookSettings,
     ...originalStrategies: string[]
-) => async (context: HookContext) => {
+): Hook => async (context) => {
     // authenticate using feathers
     await authenticate(originalSettings, ...originalStrategies).call(context.service, context);
 
@@ -22,6 +24,8 @@ export const auth = (
             options.rolesGetter(context, context.params.user.id)
         );
     }
+
+    return context;
 };
 
 type ReqRolesOptions =
