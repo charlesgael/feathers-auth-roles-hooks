@@ -1,6 +1,6 @@
 {
   "name": "feathers-auth-roles-hooks",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Hooks collection for feathersJS to login and verify roles",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
