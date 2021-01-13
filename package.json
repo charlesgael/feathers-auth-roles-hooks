@@ -18,6 +18,10 @@
   "keywords": [],
   "author": "cdjedai",
   "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/charlesgael/feathers-auth-roles-hooks/issues"
+  },
+  "homepage": "https://github.com/charlesgael/feathers-auth-roles-hooks",
   "devDependencies": {
     "@feathersjs/authentication": "^4.5.11",
     "@feathersjs/authentication-local": "^4.5.11",
