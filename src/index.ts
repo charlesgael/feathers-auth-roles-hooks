@@ -1,12 +1,18 @@
 import { hooks as authHooks } from '@feathersjs/authentication';
 import { AuthenticateHookSettings } from '@feathersjs/authentication/lib/hooks/authenticate';
-import { Forbidden } from '@feathersjs/errors';
-import { Hook, HookContext } from '@feathersjs/feathers';
+import { Forbidden, NotAuthenticated } from '@feathersjs/errors';
+import { Hook, HookContext, Params } from '@feathersjs/feathers';
 
 const { authenticate } = authHooks;
 
+interface MyContext extends HookContext {
+    params: Params & {
+        user: { [key: string]: any };
+    };
+}
+
 interface AuthOptions {
-    rolesGetter: (context: HookContext, userId: number) => string[] | Promise<string[]>;
+    rolesGetter: (context: MyContext) => string[] | Promise<string[]>;
 }
 
 type SyncContextFunction<T> = (context: HookContext) => T;
@@ -21,9 +27,9 @@ export function auth(
         await authenticate(originalSettings, ...originalStrategies).call(context.service, context);
 
         if (context.params.user) {
-            context.params.roles = await Promise.resolve(
-                options.rolesGetter(context, context.params.user.id)
-            );
+            context.params.roles = await Promise.resolve(options.rolesGetter(context as MyContext));
+        } else if (context.params.provider !== undefined) {
+            throw new NotAuthenticated(new Error('Not authenticated'));
         }
 
         return context;
